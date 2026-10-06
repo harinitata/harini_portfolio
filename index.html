@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Harini Tatakuntla · Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f7f7;--fg:#535353;--card:#fff;--line:#cfcfcf}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#202124;--fg:#acacac;--card:#2a2b2e;--line:#3c3c3c}}
+:root[data-theme="dark"]{--bg:#202124;--fg:#acacac;--card:#2a2b2e;--line:#3c3c3c}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font:13px/1.7 "IBM Plex Mono",monospace}
+h1,h2,h3{font-family:"Press Start 2P",monospace;font-weight:400;line-height:1.6;margin:0}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+canvas{outline:none}
+button:focus-visible,a:focus-visible{outline:2px solid var(--fg);outline-offset:3px}
+
+.stage{position:relative;min-height:100vh;min-height:100svh;padding:calc(env(safe-area-inset-top,0px) + clamp(28px,10vh,110px)) 0 90px}
+.col{width:100%;max-width:600px;margin:0 auto}
+#name{font-size:clamp(22px,5vw,32px);line-height:1.3;text-align:center;padding:0 24px;margin:0 0 clamp(40px,10vh,96px)}
+.game{position:relative;height:150px}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:manipulation;cursor:pointer}
+#score{opacity:0;transition:opacity .6s;position:absolute;top:8px;right:6px;font-family:"Press Start 2P",monospace;font-size:clamp(9px,1.2vw,12px);pointer-events:none}
+.live #score{opacity:1}
+#pauseBtn{visibility:hidden}
+.live #pauseBtn{visibility:visible}
+.under{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:11px}
+.hint{opacity:.75}
+.mini{background:none;border:2px solid var(--fg);padding:4px 9px;font:11px "IBM Plex Mono",monospace}
+.bottom{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);display:flex;justify-content:center}
+.cue{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:0;padding:4px 12px;font-size:12px;font-weight:500}
+.cue svg{width:26px;height:26px;animation:bob 1.4s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(6px)}}
+@media (prefers-reduced-motion:reduce){.cue svg{animation:none}html{scroll-behavior:auto}}
+
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:color-mix(in srgb,var(--bg) 78%,transparent);padding:16px;z-index:5}
+.modal.on{display:flex}
+.box{position:relative;background:var(--card);border:2px solid var(--fg);padding:clamp(28px,5vw,52px) clamp(22px,5vw,56px);max-width:min(820px,100%);width:100%;max-height:min(88vh,100%);overflow:auto;font-size:clamp(12px,1.2vw,14px);line-height:1.8;box-shadow:8px 8px 0 var(--fg);transition:max-width .25s steps(5)}
+.box.wide{max-width:min(1120px,100%)}
+.box h3{font-size:clamp(11px,1.5vw,15px);margin:0 84px 14px 0}
+.box p{margin:0 0 12px}
+.box ul{list-style:none;margin:8px 0;padding:0}
+.box li{margin:0 0 18px;padding-left:16px;border-left:2px solid var(--fg)}
+.kind{font-size:11px;opacity:.7;margin-bottom:10px}
+small{opacity:.75}
+.tags{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;font-size:11px}
+.tags span{border:1px solid var(--fg);padding:1px 10px}
+.x,.sz{position:absolute;top:12px;width:36px;height:36px;padding:0;background:none;border:0}
+.x{right:12px}.sz{right:54px}
+.sz svg{width:100%;height:100%}
+@media (max-width:640px){.sz{display:none}.box h3{margin-right:44px}}
+.x svg{width:100%;height:100%}
+.btn{color:var(--bg);background:var(--fg);border:0;padding:6px 14px;text-decoration:none;display:inline-block;margin:6px 6px 0 0}
+.btn.alt{background:none;color:var(--fg);border:2px solid var(--fg);padding:4px 12px}
+.big a{display:block;font-size:14px;padding:4px 0}
+
+.endscreen{display:none;margin-top:clamp(24px,6vh,56px);text-align:center}
+.endscreen.on{display:block}
+.endscreen h2{font-size:clamp(14px,2vw,20px);margin-bottom:12px}
+.endscreen p{font-size:12px;margin:0 0 8px}
+.endscreen #endBody a{display:inline-block;font-size:13px;margin:4px 12px}
+.endbtns{margin-top:14px}
+.details{width:100%;padding:0 24px 60px}
+.details section{padding:48px 0;border-bottom:1px dashed var(--line)}
+.details h2{font-size:12px;margin-bottom:22px}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.item{border:2px solid var(--fg);padding:16px;background:var(--card)}
+.item h3{font-size:10px}
+.item{transition:transform .3s steps(4),box-shadow .3s steps(4),opacity .6s steps(6)}
+.item.reveal{opacity:0;transform:translateY(32px)}
+.item.reveal.in{opacity:1;transform:none}
+.item.reveal.in:hover,.item.reveal.in:focus-within,.item:not(.reveal):hover{transform:translate(-5px,-5px);box-shadow:7px 7px 0 var(--fg)}
+@media (prefers-reduced-motion:reduce){.item,.item.reveal{opacity:1;transform:none;transition:none}}
+.tl{list-style:none;margin:0;padding:0}
+.tl li{padding:0 0 22px 18px;border-left:2px solid var(--fg)}
+.tl h3{font-size:10px}
+.back{margin-top:36px}
+
+/* ---- arcade layer ---- */
+.stage::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:repeating-linear-gradient(to bottom,rgba(0,0,0,.07) 0 1px,transparent 1px 3px);mix-blend-mode:multiply;animation:roll 9s linear infinite}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .stage::before{mix-blend-mode:normal;background:repeating-linear-gradient(to bottom,rgba(0,0,0,.28) 0 1px,transparent 1px 3px)}}
+:root[data-theme="dark"] .stage::before{mix-blend-mode:normal;background:repeating-linear-gradient(to bottom,rgba(0,0,0,.28) 0 1px,transparent 1px 3px)}
+@keyframes roll{to{background-position:0 60px}}
+.stage::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.18) 100%)}
+#name{text-shadow:3px 3px 0 color-mix(in srgb,var(--fg) 25%,transparent);animation:flick 5s steps(1) infinite}
+@keyframes flick{0%,92%,96%,100%{opacity:1}93%{opacity:.55}94%{opacity:1}95%{opacity:.7}}
+#name.typing::after{content:"_";animation:blink .6s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.hint.blink{animation:blink 1s steps(1) infinite;font-family:"Press Start 2P",monospace;font-size:9px}
+.game.shake{animation:shake .32s steps(2)}
+@keyframes shake{0%{transform:translate(0,0)}25%{transform:translate(-5px,2px)}50%{transform:translate(5px,-2px)}75%{transform:translate(-3px,1px)}100%{transform:none}}
+#score.flash{animation:blink .15s steps(1) 6}
+.modal.on{animation:fadeIn .2s steps(3)}
+.modal.on .box{animation:popIn .35s steps(5)}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes popIn{0%{transform:scale(.6)}70%{transform:scale(1.04)}100%{transform:scale(1)}}
+.btn{transition:transform .08s steps(2),box-shadow .08s steps(2)}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 color-mix(in srgb,var(--fg) 40%,transparent)}
+.btn:active{transform:translate(2px,2px);box-shadow:none}
+@media (prefers-reduced-motion:reduce){.stage::before,#name,#name.typing::after,.hint.blink,.game.shake,#score.flash,.modal.on,.modal.on .box{animation:none}}
+</style>
+</head>
+<body>
+<main class="stage" id="stage">
+  <h1 id="name"></h1>
+  <div class="col">
+    <div class="game" id="game">
+      <canvas id="c" tabindex="0" aria-label="Dino runner. Press space or tap to jump."></canvas>
+      <span id="score">00000</span>
+    </div>
+    <div class="under">
+      <span class="hint" id="hint">Press space or tap to start.</span>
+      <button class="mini" id="pauseBtn" aria-label="Pause or resume">Pause · Esc</button>
+    </div>
+    <div class="endscreen" id="end" role="region" aria-labelledby="endTitle">
+      <h2 id="endTitle">Contact me</h2>
+      <div id="endBody"></div>
+      <div class="endbtns"><button class="btn" id="again">Run again</button><button class="btn alt" id="readPage2">Read as a page</button></div>
+    </div>
+  </div>
+  <div class="bottom">
+    <button class="cue" id="cue" aria-label="Scroll down to read the full page">
+      <span>Prefer reading? Scroll down</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M5 9l7 7 7-7"/></svg>
+    </button>
+  </div>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="box">
+      <button class="sz" id="mSz" aria-label="Make window larger or smaller" title="Larger / smaller"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+      <button class="x" id="mX" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+      <div class="kind" id="mKind"></div>
+      <h3 id="mTitle"></h3>
+      <div id="mBody"></div>
+      <button class="btn" id="mClose">Keep running</button>
+    </div>
+  </div>
+
+  </main>
+
+<div class="details" id="details">
+  <section><h2>About</h2><div id="dAbout"></div></section>
+  <section><h2>Experience</h2><ul class="tl" id="dExp"></ul></section>
+  <section><h2>Projects</h2><div class="grid" id="dProj"></div></section>
+  <section class="big"><h2>Contact me</h2><div id="dContact"></div>
+    <button class="btn back" id="toTop">Back to the dino</button></section>
+</div>
+
+<script>
+/* ========= EDIT YOUR INFO HERE ========= */
+const DATA = {
+  name: "Harini Tatakuntla",
+  intro: {
+    title: "Hi, I'm Harini Tatakuntla",
+    about: ["Hi! I’m Harini, a Computer Science student who likes building things, breaking things, and then figuring out why they broke.",
+            "I’m interested in AI, computer vision, intelligent systems, and game development, and I love turning weird little ideas into projects that actually work. I’ve explored everything from AI-powered applications and computer vision to hackathons and interactive experiments — and even got a small taste of real-world engineering during my time as an intern at Qualcomm.",
+          "When I’m not coding, you’ll probably find me painting, designing, or obsessing over how things look. Being an artist has definitely influenced how I think about technology — I like combining logic with creativity and making things that are not just functional, but fun to experience."],
+    facts: [["Location","Hyderabad, India"],["Open to","Full-time / freelance"]],
+    skills: ["OpenCV","AI agents","Python","C","Java"]
+  },
+  experience: [
+    {title:"Interim Engineering Intern, Qualcomm",when:"May 2026 – July 2026",text:"Built an end-to-end Python automation tool for Qualcomm AI Box device validation and diagnostics, automating log collection, device health monitoring, performance profiling, and failure analysis. Integrated Qualcomm observability tools and Generative AI APIs to analyze system metrics and summarize diagnostic reports, with JSON and HTML dashboards for clear visualization."}
+  ],
+  projects: [
+    {title:"LunaCare - AI powered girl health chatbot",text:"Built an NLP-powered women's health chatbot covering menstruation, PCOS/PCOD, and breast health using the Cohere AI API for empathetic, conversational responses. Designed a fully responsive React.js + Node.js frontend, creating an accessible and supportive digital health experience.",tags:["Python","Flask","Node.js","Google Cohere AI"],link:"https://github.com/harinitata/LunaCare_Chatbot"},
+    {title:"KinexAI - AI Fitness Coach with real-time form correction (Team lead)",text:"Built a real-time exercise form correction system using OpenCV and MediaPipe, analysing joint angles and COG to detect and flag improper technique. Engineered an automated rep counter using a kinematic state machine to track movement phases accurately across multiple exercise types. Developed a multi-threaded feedback pipeline integrating Amazon Bedrock for AI coaching insights and AWS Polly for live voice guidance during workouts.",tags:["Python","OpenCV","MediaPipe","AWS Polly","Amazon bedrock"],link:"https://github.com/harinitata/KinexAI"},
+    {title:"Gesture Based GameController",text:"Built a real-time gesture-based game controller using Python, OpenCV, and MediaPipe, translating hand movements into keyboard inputs to control Subway Surfers. Implemented webcam-based hand tracking and gesture recognition for responsive, touch-free gameplay.",tags:["Python","OpenCV","MediaPipe","Blue stacks"],link:"https://github.com/harinitata/Gesture_Based_Game_Controller"}
+  ],
+  contact: {
+    text: "Want to work together or just say hi? Reach me here.",
+    links: [["Email","harinitatakuntla@gmail.com"],["GitHub","https://github.com/harinitata"],["LinkedIn","www.linkedin.com/in/harini-tatakuntla-"]]
+  }
+};
+/* ======================================== */
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+document.title=DATA.name+" · Portfolio";
+const RM=matchMedia("(prefers-reduced-motion:reduce)").matches;
+$("name").setAttribute("aria-label",DATA.name);
+if(RM)$("name").textContent=DATA.name;
+else{const nm=$("name");nm.classList.add("typing");let ni=0;const tw=setInterval(()=>{nm.textContent=DATA.name.slice(0,++ni);if(ni>=DATA.name.length){clearInterval(tw);setTimeout(()=>nm.classList.remove("typing"),1200)}},85)}
+$("hint").classList.add("blink");$("hint").textContent="PRESS SPACE OR TAP TO START";
+
+/* ---- content builders (used by cards and the scroll page) ---- */
+const aboutHTML=()=>{const a=DATA.intro;return a.about.map(p=>`<p>${esc(p)}</p>`).join("")+`<p>${a.facts.map(f=>`<b>${esc(f[0])}:</b> ${esc(f[1])}`).join("<br>")}</p><div class="tags">${a.skills.map(s=>`<span>${esc(s)}</span>`).join("")}</div>`};
+const expItems=()=>DATA.experience.map(e=>`<li><h3>${esc(e.title)}</h3><small>${esc(e.when)}</small><p>${esc(e.text)}</p></li>`).join("");
+const projHTML=p=>`<p>${esc(p.text)}</p><div class="tags">${(p.tags||[]).map(x=>`<span>${esc(x)}</span>`).join("")}</div>`+(p.link?`<a class="btn" href="${esc(p.link)}" target="_blank" rel="noopener">View project</a>`:"");
+const contactHTML=()=>`<p>${esc(DATA.contact.text)}</p>`+DATA.contact.links.map(l=>`<a href="${esc(l[1])}" target="_blank" rel="noopener">${esc(l[0])}</a>`).join("");
+$("dAbout").innerHTML=aboutHTML();
+$("dExp").innerHTML=expItems();
+$("dProj").innerHTML=DATA.projects.map(p=>`<div class="item"><h3>${esc(p.title)}</h3>${projHTML(p)}</div>`).join("");
+$("dContact").innerHTML=contactHTML();
+const pItems=[...document.querySelectorAll("#dProj .item")];pItems.forEach(el=>el.classList.add("reveal"));
+new IntersectionObserver((es,ob)=>{if(es[0].isIntersecting){pItems.forEach((el,i)=>setTimeout(()=>el.classList.add("in"),i*150));ob.disconnect()}},{threshold:.15}).observe($("dProj"));
+$("endBody").innerHTML=contactHTML();
+
+/* ---- order: about me, experience, then projects. No loop. ---- */
+const SEQ=[{type:"about",label:"About me"},{type:"exp",label:"Experience"},...DATA.projects.map(p=>({type:"proj",label:p.title,d:p}))];
+
+/* ---- sprites ---- */
+const HEAD=["............#########.","...........###########","...........##.########","...........###########","...........###########","...........###########","...........#####......","...........#########..","#.........######......","#.......########......","##.....#########......","##....############....","###..###########.#....","################......","################......",".###############......","..#############.......","...###########........","....#########.........","....#########........."];
+const LEGS={S:[".....####.###.........",".....####.###.........",".....##.#.###.........",".....###..####........"],
+            A:[".....####.###.........",".....####.###.........",".....####.............",".....#####............"],
+            B:[".....####.###.........",".....####.###.........","..........###.........","..........####........"]};
+const CACT=[".....####.....","....######....","....######....","....######....",".##.######....",".##.######....",".##.######.##.",".##.######.##.",".##.######.##.",".#########.##.",".#########.##.","....#########.","....#########.","....######....","....######....","....######....","....######....","....######....","....######....","....######....","....######....","....######....","....######....","....######...."];
+const BIRD={A:[".....#.................", ".....##................", "....####...............", "...######..............", "..##############.......", "################.......", "...####################", "........##########.....", "........###############", "........#######........", "........######.........", "........#####..........", "........####...........", "........###............", "........##.............", "........#.............."],
+ B:["..........#............", "..........##...........", "..........###..........", "....#.....####.........", "....###...#####........", "...#####..######.......", "..#######.#######......", "........###############", "........###########....", ".........##############", "..........########.....", "...........#####.......", ".......................", ".......................", ".......................", "......................."]};
+/* ground: thin line, small humps and dips, scattered specks (tile = 1200 logical px) */
+const TILE=1200,COLS=TILE/2,off=new Array(COLS).fill(0),specks=[];
+[[150,[1,1,2,2,3,3,3,3,2,2,1,1]],[430,[1,1,2,2,3,3,3,3,2,2,1,1]]].forEach(([c,p])=>p.forEach((h,i)=>off[c+i]=h));
+[[176,10],[456,10]].forEach(([c,n])=>{for(let i=0;i<n;i++)off[c+i]=-1});
+let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+for(let i=0;i<85;i++)specks.push({x:Math.floor(rnd()*COLS)*2,y:6+Math.floor(rnd()*6)*2,w:[2,2,2,4,6][Math.floor(rnd()*5)]});
+const cache={};
+function sprite(key,rows,col){
+  const k=key+col;if(cache[k])return cache[k];
+  const c=document.createElement("canvas");c.width=rows[0].length;c.height=rows.length;
+  const x=c.getContext("2d");x.fillStyle=col;
+  rows.forEach((r,j)=>{for(let i=0;i<r.length;i++)if(r[i]==="#")x.fillRect(i,j,1,1)});
+  return cache[k]=c;
+}
+const PX=2,DW=22*PX,DH=24*PX,CW=14*PX,CH=24*PX,DX=60;
+
+/* ---- canvas ---- */
+const stage=$("stage"),game=$("game"),cv=$("c"),ctx=cv.getContext("2d");
+let k=1,LW=800,LH=400,GY=270,col="#535353";
+function resize(){
+  const dpr=devicePixelRatio||1,w=game.clientWidth,h=game.clientHeight;
+  k=h/150;LW=w/k;LH=150;GY=127;
+  cv.width=w*dpr;cv.height=h*dpr;ctx.setTransform(k*dpr,0,0,k*dpr,0,0);
+  if(dino&&!dino.air)dino.y=GY-DH;
+}
+const readCol=()=>{col=getComputedStyle(document.body).color};
+
+/* ---- arcade particles ---- */
+let parts=[];
+function burst(x,y,n,vx,vy,life){for(let i=0;i<n;i++)parts.push({x,y,vx:(Math.random()-.5)*vx,vy:-Math.random()*vy,l:life*(.6+Math.random()*.6),m:life,s:Math.random()<.5?2:4})}
+function shake(){if(RM)return;game.classList.remove("shake");void game.offsetWidth;game.classList.add("shake")}
+let mile=0;
+/* ---- state ---- */
+let reveal=0,hi=0,dino=null,obs,speed,t,score,gx,spawnIn,idx,running=false,paused=true,finished=false,offscreen=false,cur=null,from="game",last,frame=0;
+function reset(){hi=Math.max(hi,Math.floor(score||0));parts=[];mile=0;dino={y:GY-DH,vy:0};obs=[];speed=210;t=0;score=0;gx=0;spawnIn=260;idx=0;finished=false}
+reset();resize();addEventListener("resize",resize);
+
+const modal=$("modal"),end=$("end");
+const modalOpen=()=>modal.classList.contains("on")||end.classList.contains("on");
+
+function spawn(){
+  const s=SEQ[idx++],isLast=idx===SEQ.length;
+  obs.push(s.type==="exp"?{...s,i:idx-1,x:LW+20,w:46,y:GY-74,last:isLast}:{...s,i:idx-1,x:LW+20,w:CW,y:GY-CH,last:isLast});
+}
+function openCard(o,src){
+  cur=o;from=src;paused=true;
+  const kind={about:"About me",exp:"Experience",proj:"Project"}[o.type];
+  $("mKind").textContent=kind;
+  $("mTitle").textContent=o.type==="about"?DATA.intro.title:o.type==="exp"?"Where I've worked":o.d.title;
+  $("mBody").innerHTML=o.type==="about"?aboutHTML():o.type==="exp"?`<ul>${expItems()}</ul>`:projHTML(o.d);
+  $("mClose").textContent="Keep running";
+  modal.classList.add("on");$("mClose").focus();$("mBody").parentElement.scrollTop=0;
+}
+function closeCard(){
+  modal.classList.remove("on");
+  if(cur&&cur.last){finish();return}
+  paused=false;cv.focus({preventScroll:true});
+}
+function finish(){finished=true;paused=true;dino.y=GY-DH;dino.vy=0;end.classList.add("on");$("again").focus()}
+let userPaused=false;
+function togglePause(){
+  if(!running||finished||modalOpen()||offscreen)return;
+  userPaused=!userPaused;paused=userPaused;
+  $("pauseBtn").textContent=userPaused?"Resume · Esc":"Pause · Esc";
+  cv.focus({preventScroll:true});
+}
+$("again").onclick=()=>{
+  end.classList.remove("on");reset();running=true;paused=false;userPaused=false;$("pauseBtn").textContent="Pause · Esc";cv.focus({preventScroll:true});
+};
+function jump(){
+  if(modalOpen()||finished||offscreen)return;
+  if(userPaused){togglePause();return}
+  if(!running){
+    running=true;paused=false;dino.vy=-600;stage.classList.add("live");
+    $("hint").classList.remove("blink");$("hint").style.cssText="";$("hint").textContent="Space / tap to jump · Esc to pause. Every obstacle is a part of me.";return}
+  if(dino.y>=GY-DH-1)dino.vy=-600;
+}
+function toDetails(){modal.classList.remove("on");$("details").scrollIntoView()}
+
+function step(dt){
+  t+=dt;speed=Math.min(330,210+t*2.5);gx=(gx+speed*dt)%TILE;score+=speed*dt*.04;
+  const wasAir=dino.y<GY-DH-1;
+  dino.vy+=2300*dt;dino.y=Math.min(GY-DH,dino.y+dino.vy*dt);if(dino.y>=GY-DH)dino.vy=0;
+  const nowAir=dino.y<GY-DH-1;
+  if(wasAir&&!nowAir)burst(DX+16,GY-2,8,120,60,.35);
+  else if(!nowAir&&Math.random()<dt*14)burst(DX+6,GY-2,1,50,40,.3);
+  const m=Math.floor(score/100);if(m>mile){mile=m;const sc=$("score");sc.classList.remove("flash");void sc.offsetWidth;sc.classList.add("flash")}
+  parts.forEach(p=>{p.x+=(p.vx-speed*.5)*dt;p.y+=p.vy*dt;p.vy+=500*dt;p.l-=dt});parts=parts.filter(p=>p.l>0);
+  spawnIn-=speed*dt;if(spawnIn<=0&&idx<SEQ.length){spawn();spawnIn=340+Math.pow(Math.random(),1.4)*520}
+  obs.forEach(o=>o.x-=speed*dt);
+  /* card opens when an obstacle reaches the dino, jumped over or not */
+  const o=obs.find(o=>o.x<=DX+DW-4);
+  if(o){obs=obs.filter(q=>q!==o);burst(o.x+o.w/2,o.y+(o.type==="exp"?16:CH/2),18,320,220,.6);shake();openCard(o,"game")}
+}
+function draw(ts){
+  ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,LW,LH);ctx.fillStyle=col;
+  ctx.save();ctx.beginPath();ctx.rect(0,0,LW*reveal,LH);ctx.clip();
+  const c0=Math.floor(gx/2);
+  for(let i=0,n=Math.ceil(LW/2)+1;i<n;i++){
+    const a=off[(c0+i)%COLS],b=off[(c0+i+COLS-1)%COLS],top=Math.max(a,b);
+    ctx.fillRect(i*2-(gx%2),GY-top*2,2,2+Math.abs(a-b)*2);
+  }
+  for(let r=0;r<=Math.ceil(LW/TILE);r++)specks.forEach(p=>{const x=p.x-gx+r*TILE;if(x>-8&&x<LW)ctx.fillRect(x,GY+p.y,p.w,2)});
+  ctx.restore();
+  ctx.font="12px 'IBM Plex Mono',monospace";ctx.textAlign="center";
+  obs.forEach(o=>{
+    if(o.type==="exp"){
+      const x=o.x,y=o.y;
+      const bf=Math.floor(ts/130)%2?"A":"B";ctx.drawImage(sprite("b"+bf,BIRD[bf],col),x,y,46,32);
+      ctx.fillText(o.label,x+o.w/2,y-18);
+    }else{
+      ctx.drawImage(sprite("c",CACT,col),o.x,o.y,CW,CH);ctx.fillText(o.label.slice(0,20),o.x+CW/2,o.y-8);
+    }
+  });
+  const air=dino.y<GY-DH-1,f=(air||paused||!running)?"S":(Math.floor(ts/90)%2?"A":"B");
+  ctx.drawImage(sprite("d"+f,HEAD.concat(LEGS[f]),col),DX,dino.y,DW,DH);
+  parts.forEach(p=>{ctx.globalAlpha=Math.max(0,p.l/p.m);ctx.fillRect(Math.round(p.x),Math.round(p.y),p.s,p.s)});ctx.globalAlpha=1;
+  if(userPaused){ctx.font="10px 'Press Start 2P',monospace";ctx.fillText("PAUSED",LW/2,GY-85)}
+}
+function loop(ts){
+  const dt=Math.min(.033,(ts-(last||ts))/1000);last=ts;
+  if(running&&reveal<1)reveal=Math.min(1,reveal+dt/.8);
+  if(!paused&&!offscreen)step(dt);
+  if(++frame%30===0)readCol();
+  draw(ts);const p5=n=>String(Math.floor(n)).padStart(5,"0");$("score").textContent=(hi>0?"HI "+p5(hi)+"  ":"")+p5(score);
+  requestAnimationFrame(loop);
+}
+readCol();requestAnimationFrame(loop);
+
+/* pause the game while the page is scrolled away from the dino */
+new IntersectionObserver(e=>{offscreen=e[0].intersectionRatio<.4},{threshold:[0,.4,.7,1]}).observe(stage);
+
+addEventListener("keydown",e=>{
+  const esc_=e.code==="Escape"||e.code==="Backslash";
+  if(modal.classList.contains("on")){if(e.code==="Escape")closeCard();return}
+  if(end.classList.contains("on")||offscreen)return;
+  if(esc_){e.preventDefault();togglePause();return}
+  if(e.code==="Space"||e.code==="ArrowUp"){e.preventDefault();if(userPaused)togglePause();else jump()}
+});
+cv.addEventListener("pointerdown",jump);
+$("pauseBtn").onclick=togglePause;
+$("mClose").onclick=$("mX").onclick=closeCard;
+$("mSz").onclick=()=>$("mSz").parentElement.classList.toggle("wide");
+$("readPage2").onclick=toDetails;
+$("cue").onclick=toDetails;
+$("toTop").onclick=()=>{scrollTo({top:0});cv.focus({preventScroll:true})};
+modal.addEventListener("pointerdown",e=>{if(e.target===modal)closeCard()});
+</script>
+</body>
+</html>
